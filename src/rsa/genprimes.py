@@ -39,7 +39,7 @@ def lowPrimeTest(prime_number_candidate, matrix_size):
 
     return True
 
-#Teste iterativo de Miller-Rabin para checar se o número é composto (True) ou é um primo provável (False)
+#Teste iterativo de Miller-Rabin para checar se o número é primo
 def millerRabin(prime_number_candidate, iterations):
     if prime_number_candidate % 2 == 0:
         return False
