@@ -51,7 +51,7 @@ def millerRabin(prime_number_candidate, iterations):
         d //= 2
         s += 1
 
-    for i in range(iterations):
+    for _ in range(iterations):
         a = random.randrange(2, prime_number_candidate - 1)
         x = pow(a, d, prime_number_candidate)
 
