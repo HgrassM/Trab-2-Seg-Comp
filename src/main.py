@@ -6,6 +6,8 @@ from rsa import genprimes, keygen
 
 #print(f"\n\nThe number {number} is prime? {genprimes.millerRabin(number, 40)}")
 
-number2 = 36
+#number2 = 36
 
-print(f"\n\nCharmichael function for the number {number2} is {keygen.charmichael(number2)}")
+#print(f"\n\nCharmichael function for the number {number2} is {keygen.charmichael(number2)}")
+
+print(f"The e, d and n of RSA are:\n\n{keygen.generateKeys()}")
