@@ -50,7 +50,7 @@ def generateKeys():
     p = genprimes.genPrimeNumber(2048)
     q = genprimes.genPrimeNumber(2048)
 
-    # Computar pq
+    # Computar n
     n = p*q
 
     # Computar a função totient
@@ -63,6 +63,6 @@ def generateKeys():
     # Computar d
     d = getModularMultiplicativeInverse(e, totient)
 
-    return (e, d, n)
+    return {"e": e, "d": d, "n": n}
 
 

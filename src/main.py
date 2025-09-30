@@ -1,4 +1,4 @@
-from rsa import genprimes, keygen
+from rsa import genprimes, keygen, crypto
 
 #print(f"Generating prime number that is 2048 bits long:\n\n{genprimes.genPrimeNumber(2048)}")
 
@@ -10,4 +10,15 @@ from rsa import genprimes, keygen
 
 #print(f"\n\nCharmichael function for the number {number2} is {keygen.charmichael(number2)}")
 
-print(f"The e, d and n of RSA are:\n\n{keygen.generateKeys()}")
+keys = keygen.generateKeys()
+
+print(f"The e, d and n of RSA are:\n\n{keys}\n\n")
+
+c = crypto.dummyEncrypt(12345, keys["e"], keys["n"])
+
+print(f"The ciphertext of '12345' is {c}\n\n")
+
+m = crypto.dummyDecrypt(c, keys["d"], keys["n"])
+
+print(f"The plaintext of the ciphertext is {m}\n")
+
