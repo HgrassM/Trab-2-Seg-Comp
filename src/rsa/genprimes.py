@@ -34,7 +34,7 @@ def lowPrimeTest(prime_number_candidate, matrix_size):
 
     #Divide o cadidato a número primo pelos primos menores que ele
     for prime in p_list:
-        if (prime_number_candidate % prime == 0) and (prime**2 <= prime_number_candidate):
+        if (prime_number_candidate % prime == 0):
             return False
 
     return True
