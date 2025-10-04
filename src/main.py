@@ -1,24 +1,69 @@
 from rsa import genprimes, keygen, crypto
+from sign_verify import DigitalSignature
 
-#print(f"Generating prime number that is 2048 bits long:\n\n{genprimes.genPrimeNumber(2048)}")
+def test_part1():
+    """Teste da Parte I: Geração de chaves e cifração básica"""
+    print("=== PARTE I: GERAÇÃO DE CHAVES E CIFRAÇÃO ===")
+    
+    keys = keygen.generateKeys()
+    print(f"As chaves RSA geradas são:\n e: {keys['e']}\n d: {keys['d']}\n n: {keys['n']}\n")
 
-#number = 359334085968622831041960188598043661065388726959079837
+    # Teste de cifração/decifração
+    plaintext = 12345
+    ciphertext = crypto.dummyEncrypt(plaintext, keys["e"], keys["n"])
+    decrypted = crypto.dummyDecrypt(ciphertext, keys["d"], keys["n"])
 
-#print(f"\n\nThe number {number} is prime? {genprimes.millerRabin(number, 40)}")
+    print(f"Texto original: {plaintext}")
+    print(f"Texto cifrado: {ciphertext}")
+    print(f"Texto decifrado: {decrypted}")
+    print(f"Decifração correta: {plaintext == decrypted}\n")
 
-#number2 = 36
+    return keys
 
-#print(f"\n\nCharmichael function for the number {number2} is {keygen.charmichael(number2)}")
+def test_part2_part3():
+    """Teste das Partes II e III: Assinatura e Verificação Digital"""
+    print("\n=== PARTE II e III: ASSINATURA E VERIFICAÇÃO DIGITAL ===")
+    
+    # Criar instância de assinatura digital
+    ds = DigitalSignature()
+    
+    # Mensagem de teste
+    test_message = "Esta é uma mensagem importante que precisa ser assinada digitalmente."
+    
+    print("1. Assinando a mensagem...")
+    # Parte II: Assinar o documento
+    signed_doc = ds.sign_document(test_message)
+    print("Documento assinado gerado com sucesso!")
+    print(f"Documento assinado (primeiras 200 caracteres):\n{signed_doc[:200]}...\n")
+    
+    print("2. Verificando a assinatura...")
+    # Parte III: Verificar a assinatura
+    is_valid, recovered_message = ds.verify_document(signed_doc)
+    
+    print(f"Mensagem recuperada: {recovered_message}")
+    print(f"Assinatura válida: {is_valid}\n")
+    
+    print("3. Testando verificação com mensagem alterada...")
+    # Teste: tentar verificar com mensagem alterada
+    tampered_doc = signed_doc.replace("importante", "MODIFICADA")
+    is_valid_tampered, tampered_message = ds.verify_document(tampered_doc)
+    
+    print(f"Assinatura válida para mensagem modificada: {is_valid_tampered}")
+    print(f"Isso demonstra a integridade da assinatura digital!\n")
 
-keys = keygen.generateKeys()
+def test_hash_function():
+    """Teste da função de hash SHA-3"""
+    print("\n=== TESTE DA FUNÇÃO HASH SHA-3 ===")
+    
+    test_string = "Mensagem de teste para hash"
+    hash_result = crypto.calculate_sha3_hash(test_string)
+    
+    print(f"Mensagem: {test_string}")
+    print(f"Hash SHA3-256 (como inteiro): {hash_result}")
+    print(f"Tamanho do hash em bits: {hash_result.bit_length()}\n")
 
-print(f"The e, d and n of RSA are:\n\n{keys}\n\n")
-
-c = crypto.dummyEncrypt(12345, keys["e"], keys["n"])
-
-print(f"The ciphertext of '12345' is {c}\n\n")
-
-m = crypto.dummyDecrypt(c, keys["d"], keys["n"])
-
-print(f"The plaintext of the ciphertext is {m}\n")
-
+if __name__ == "__main__":
+    # Executar todos os testes
+    keys = test_part1()
+    test_hash_function()
+    test_part2_part3()
