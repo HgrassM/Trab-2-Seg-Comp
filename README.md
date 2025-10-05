@@ -15,8 +15,7 @@ O presente trabalho foi implementado em três partes: (1) geração de chaves p�
 
 # Geração de Chaves
 
-A geração de chaves se baseia no conceito de "trapdoor one-way function", ou seja, uma função que é fácil de calcular em uma direção, mas quase impossível de inverter sem uma informação secreta (a "trapdoor"). No caso do RSA, a função é
-baseada na multiplicação de dois números primos grandes @katz2014introduction.
+A geração de chaves se baseia no conceito de "trapdoor one-way function", ou seja, uma função que é fácil de calcular em uma direção, mas quase impossível de inverter sem uma informação secreta (a "trapdoor"). No caso do RSA, a função é baseada na multiplicação de dois números primos grandes @katz2014introduction.
 
 Neste trabalho, os números primos gerados são de 2048 bits, ou seja, possuem aproximadamente 617 dígitos decimais. Para gerar esses números, são combinados dois métodos: (1) o "Sieve of Sundaram" para eliminar rapidamente números divisíveis por primos pequenos, e (2) o "Miller-Rabin Primality Test" para verificar a primalidade dos números restantes. Como o algoritmo de Miller-Rabin é mais custoso, ele é aplicado apenas a um subconjunto dos números gerados pelo Sieve of Sundaram.
 
@@ -96,3 +95,31 @@ def millerRabin(prime_number_candidate, iterations):
 
     return True
 ```
+A combinação desses dois métodos permite a geração eficiente de números primos grandes $p$ e $q$, cada um com 2048 bits. Esses números são então utilizados para calcular o módulo $n = p \cdot q$, onde $n$ é o módulo RSA e é utilizado tanto na chave pública quanto na chave privada. 
+
+As chaves são calculadas pela função de "Carmichael" ($\lambda(n) = \text{lcm}(p-1, q-1)$), que é uma versão otimizada da função totiente de "Euler" ($\phi(n) = (p-1)(q-1)$). A diferença entre as duas funções é que $\lambda(n)$, é o menor valor que satisfaz a condição de coprimos com $n$, enquanto $\phi(n)$ pode ser maior @katz2014introduction. No código, a função de Carmichael é implementada da seguinte forma:
+
+```python
+def charmichael(n, is_prime):
+    if is_prime:
+        return n-1
+
+    a_list = []
+    exponent = 1
+
+    for i in range(n-1):
+        if math.gcd(n, i+1) == 1:
+            a_list.append(i+1)
+
+    while not doesExponentHoldsForIntegerList(a_list, n, exponent):
+        exponent += 1
+
+    return exponent
+```
+
+A função `charmichael` calcula o menor expoente, que é utilizado para calcula o totiente em `totient = math.lcm(p-1, q-1)`. Isso equivale a função de Carmichael definida por $\lambda(n) = \text{lcm}(p-1, q-1)$. Além disso satifaz a $a^{\lambda(n)} \equiv 1 \pmod{n}$ para todo $a$ coprimo com $n$ @katz2014introduction.
+
+
+
+
+
