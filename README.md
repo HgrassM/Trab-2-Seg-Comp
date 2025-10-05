@@ -49,16 +49,21 @@ def genPrimesList(nlimit):
 ## Miller-Rabin Primality Test
 Depois de filtrar os números com o Sieve of Sundaram, o código aplica o Miller-Rabin Primality Test para verificar a primalidade dos números restantes. O teste é um algoritmo probabilístico que determina se um número é composto ou provavelmente primo e segue os passos descritos abaixo:
 
-1. Escolher um número ímpar $n > 3$ e um número de iterações $k$.
-2. Cortar imediatamente se $n$ é um número par.
-3. Decompor $n-1$ na forma $2^s \cdot d$, onde $d$ é ímpar, e $s$ é o número de fatores de 2 em $n-1$, ou seja, quantas vezes $n-1$ pode ser dividido por 2.
-4. Testar 40 vezes com bases aleatórias $a$ no intervalo $[2, n-2]$:
-   - Calcular $x = a^d \pmod{n}$.
-   - Se $x$ é 1 ou $n-1$, continuar para a próxima iteração.
-   - Repetir $s-1$ vezes:
-     - Calcular $x = x^2 \pmod{n}$.
-     - Se $x$ é $n-1$, continuar para a próxima iteração.
-   - Se nenhuma das condições acima for satisfeita, retornar FALSO ($n$ é composto).
+1. **Escolha de Parâmetros:**
+Escolher um número ímpar $n > 3$ e um número de iterações $k$.
+2. **Verificação Inicial:**
+Se $n$ for par, o teste retorna FALSO (n é composto).
+3. **Decomposição:**
+Calcula-se $n-1$ na forma $2^s \cdot d$, onde $d$ é ímpar e $s$ representa quantas vezes $n-1$ pode ser dividido por 2.
+4. **Testes com Bases Aleatórias:**
+Para cada iteração, escolhe-se uma base aleatória $a$ no intervalo $[2, n-2]$ e calcula-se $x = a^d \pmod{n}$.
+5. **Verificação de Condições:**
+Em cada iteração são verificadas as seguintes condições:
+   - Se $x$ é 1 ou $n-1$, o teste continua para a próxima iteração.
+   - Caso contrário, repete-se o processo $s-1$ vezes, calculando $x = x^2 \pmod{n}$ e verificando se $x$ é $n-1$.
+   - Se nenhuma das condições for satisfeita, o teste retorna FALSO (n é composto).
+6. **Conclusão:**
+Se todas as iterações forem concluídas sem retornar FALSO, o teste retorna VERDADEIRO (n é provavelmente primo).
 
 As etapas do Miller-Rabin Primality Test são implementadas no seguinte código:
 
