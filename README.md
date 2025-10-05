@@ -1,8 +1,8 @@
 ---
 title: "Trabalho de Implementação 2 - Gerador e Verificador de Assinaturas Digitais RSA"
 author: "H. de M. O. Lima – 211055281, L. P. Torres – 222011623, and M. N. Miyata – 180126890"
-abstract: "Este trabalho apresenta a implementação de um gerador e verificador de assinaturas digitais utilizando o algoritmo RSA. O objetivo é garantir a autenticidade e integridade das mensagens trocadas entre as partes envolvidas. A implementação inclui a geração de chaves públicas e privadas, a assinatura digital de mensagens e a verificação dessas assinaturas. O trabalho também discute os desafios enfrentados durante o desenvolvimento e as soluções adotadas para superá-los."
-keywords: ["Assinaturas Digitais", "RSA", "Criptografia"]
+abstract: "Este trabalho apresenta a implementação de criptografia assimétrica utilizando o algoritmo RSA. Foram codificados em python, a geração de chaves públicas e privadas, e a criação e verificação de assinaturas digitais. O trabalho também discute o uso de técnicas de otimização para diminuir o custo computacional."
+keywords: ["Assinaturas Digitais", "RSA", "Criptografia Assimétrica"]
 bibliography: ["references.bib"]
 ---
 
