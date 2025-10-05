@@ -6,7 +6,7 @@ def genNumber(size):
 
 #Gera uma lista de números primos menores que o número n (Sieve of Sundaram)
 def genPrimesList(nlimit):
-    new_nlimit = nlimit-1 // 2
+    new_nlimit = (nlimit-1) // 2
 
     mark_table = [True for i in range(new_nlimit+1)]
     primes_list = []

@@ -212,3 +212,6 @@ __marimo__/
 /references.bib
 /.idea/Trab-2-Seg-Comp.iml
 /.idea/vcs.xml
+pdf_creator.py
+ieee.csl
+code-style.tex
