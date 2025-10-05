@@ -95,6 +95,8 @@ def millerRabin(prime_number_candidate, iterations):
 
     return True
 ```
+
+## Charmichael para Cálculo do Totiente
 A combinação desses dois métodos permite a geração eficiente de números primos grandes $p$ e $q$, cada um com 2048 bits. Esses números são então utilizados para calcular o módulo $n = p \cdot q$, onde $n$ é o módulo RSA e é utilizado tanto na chave pública quanto na chave privada. 
 
 As chaves são calculadas pela função de "Carmichael" ($\lambda(n) = \text{lcm}(p-1, q-1)$), que é uma versão otimizada da função totiente de "Euler" ($\phi(n) = (p-1)(q-1)$). A diferença entre as duas funções é que $\lambda(n)$, é o menor valor que satisfaz a condição de coprimos com $n$, enquanto $\phi(n)$ pode ser maior @katz2014introduction. No código, a função de Carmichael é implementada da seguinte forma:
@@ -119,7 +121,95 @@ def charmichael(n, is_prime):
 
 A função `charmichael` calcula o menor expoente, que é utilizado para calcula o totiente em `totient = math.lcm(p-1, q-1)`. Isso equivale a função de Carmichael definida por $\lambda(n) = \text{lcm}(p-1, q-1)$. Além disso satifaz a $a^{\lambda(n)} \equiv 1 \pmod{n}$ para todo $a$ coprimo com $n$ @katz2014introduction.
 
+Com o módulo $n$ e o totiente $\lambda(n)$ calculados, a chave pública é formada pelo par $(e, n)$, onde $e$ é o expoente público escolhido como 65537 por ser um número primo que equilibra segurança e eficiência. A chave privada é formada pelo par $(d, n)$, onde $d$ é o inverso multiplicativo de $e$ módulo $\lambda(n)$. Abaixo está a implementação da geração das chaves:
 
+```python
+def generateKeys():
+    p = genprimes.genPrimeNumber(2048)
+    q = genprimes.genPrimeNumber(2048)
 
+    n = p*q
 
+    totient = math.lcm(charmichael(p, True), charmichael(q, True))
 
+    e = generateE(totient)
+
+    d = getModularMultiplicativeInverse(e, totient)
+
+    return {"e": e, "d": d, "n": n}
+```
+
+# Assinatura Digital
+A assinatura digital é realizada utilizando a chave privada $(d, n)$. Como sabemos que é custo computacional é alto, o código gera um hash SHA3-256 da mensagem original e assina esse hash. A assinatura é calculada como $s = h(m)^d \pmod{n}$, onde $h(m)$ é o hash da mensagem $m$.
+
+O hash SHA3-256 gera um valor de 256 bits, que é significativamente menor que o módulo $n$ de 4096 bits, tornando o processo de assinatura mais eficiente. Abaixo está a implementação da função de assinatura digital:
+
+```python
+def calculate_sha3_hash(message):
+    if isinstance(message, str):
+        message = message.encode('utf-8')
+    sha3 = hashlib.sha3_256()
+    sha3.update(message)
+    return int.from_bytes(sha3.digest(), 'big')
+```
+
+O hash é então assinado com a chave privada:
+
+```python
+def sign_message(message, d, n):
+    message_hash = calculate_sha3_hash(message)
+    signature = dummyEncrypt(message_hash, d, n)
+    return signature
+```
+
+Por fim, o documento assinado é salvo em um texto estruturado com delimitadores e assinatura em base64 para facilitar o armazenamento e a transmissão.
+
+# Verificação de Assinatura Digital
+A verificação da assinatura digital é realizada utilizando a chave pública $(e, n)$ e foi implementada em duas etapas principais: (1) parsing do documento assinado para extrair a mensagem original e a assinatura, e (2) verificação da assinatura comparando o hash da mensagem original com o hash recuperado da assinatura.
+
+A função `parse_signed_document` extrai a mensagem e a assinatura do documento assinado:
+
+```python
+def parse_signed_document(signed_document):
+    try:
+        # Primeiro: separar linhas e remover espaços em branco
+        # Segundo: encontrar os índices dos delimitadores
+        # Terceiro: extrair mensagem e assinatura
+        # Quarto: decodificar assinatura de base64 para inteiro
+        return message, signature
+    except Exception as e:
+        # Lançar erro se o parsing falhar
+        raise ValueError(f"Erro ao fazer parsing do documento assinado: {str(e)}")
+```
+
+A função `verify_signature` realiza a verificação da assinatura e recebe quatro parâmetros: a mensagem original, a assinatura, o expoente público `e` e o módulo `n`. A verificação é feita da seguinte forma:
+
+```python
+def verify_signature(message, signature, e, n):
+    message_hash = calculate_sha3_hash(message)
+    decrypted_hash = dummyEncrypt(signature, e, n)
+    return message_hash == decrypted_hash
+```
+
+# Desafios e Soluções
+Durante a implementação do gerador e verificador de assinaturas digitais RSA, alguns desafios foram enfrentados e soluções foram adotadas para superá-los como serão discutidos a seguir.
+
+## Geração de Números Primos Grandes
+A geração de números primos grandes é um desafio significativo devido à complexidade computacional envolvida. A combinação do Sieve of Sundaram com o Miller-Rabin Primality Test foi adotada para equilibrar eficiência e precisão na geração de números primos de 2048 bits.
+
+O algoritmo de Miller-Rabin possui a complexidade de $O(k \cdot \log^3 n)$, onde $k$ é o número de iterações e $n$ é o número a ser testado. A escolha do número de iterações $k$ é crucial para garantir um equilíbrio entre segurança e desempenho. No código, foi escolhido $k = 40$, o que proporciona uma alta probabilidade de que um número identificado como primo seja realmente primo.
+
+Já o Sieve of Sundaram possui a complexidade de $O(n \log n)$, onde $n$ é o limite superior para a geração de números primos. A combinação desses dois métodos permite a geração eficiente de números primos grandes, minimizando o tempo gasto na verificação de primalidade.
+
+## Cálculo do Totiente
+O cálculo do totiente utilizando a função de Carmichael foi uma escolha estratégica para otimizar o desempenho. A função de Carmichael é mais eficiente que a função totiente de Euler, especialmente para números grandes, pois reduz o tamanho dos valores envolvidos no cálculo do inverso multiplicativo.
+
+Em outras palavras, a função de Carmichael fornece um valor menor que ainda satisfaz as propriedades necessárias para a geração das chaves RSA, resultando em um processo de geração de chaves mais rápido e eficiente.
+
+## Assinatura e Verificação
+A assinatura digital de hashes em vez de mensagens completas foi uma solução adotada para reduzir o custo computacional e ainda assim garantir a autenticidade e integridade das mensagens. O uso do hash SHA3-256, que gera um valor de 256 bits, ou seja, 1/16 do tamanho do módulo $n$ de 4096 bits, torna o processo de assinatura e verificação significativamente mais eficiente. Uma vez que a complexidade da exponenciação modular é $O(\log^3 n)$, cada bit a menos no valor a ser assinado ou verificado resulta em uma redução substancial no tempo de computação.
+
+# Conclusão
+Este trabalho apresentou a implementação de um gerador e verificador de assinaturas digitais utilizando o algoritmo RSA. A combinação do Sieve of Sundaram com o Miller-Rabin Primality Test permitiu a geração eficiente de números primos grandes, essenciais para a segurança do RSA. A utilização da função de Carmichael otimizou o cálculo do totiente, e a assinatura de hashes em vez de mensagens completas reduziu o custo computacional das operações de assinatura e verificação. A implementação foi realizada em Python, utilizando bibliotecas padrão para manipulação de números grandes e funções hash.
+
+# Referências
