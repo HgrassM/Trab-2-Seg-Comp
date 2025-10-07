@@ -1,5 +1,6 @@
 from rsa import genprimes, keygen, crypto
 from sign_verify import DigitalSignature
+import copy
 
 def test_part1():
     """Teste da Parte I: Geração de chaves e cifração básica"""
@@ -9,14 +10,17 @@ def test_part1():
     print(f"As chaves RSA geradas são:\n e: {keys['e']}\n d: {keys['d']}\n n: {keys['n']}\n")
 
     # Teste de cifração/decifração
-    plaintext = 12345
-    ciphertext = crypto.dummyEncrypt(plaintext, keys["e"], keys["n"])
-    decrypted = crypto.dummyDecrypt(ciphertext, keys["d"], keys["n"])
+    rsa_crypt = crypto.RsaCrypto()
+    plaintext = "Texto de teste"
+    plaintext_bytes = bytearray(copy.deepcopy(plaintext), 'utf-8')
+    ciphertext = rsa_crypt.encrypt(plaintext_bytes, keys["e"], keys["n"])
+    decrypted = rsa_crypt.decrypt(ciphertext, keys["d"], keys["n"])
+    decrypted_text = decrypted.decode('utf-8')
 
-    print(f"Texto original: {plaintext}")
-    print(f"Texto cifrado: {ciphertext}")
-    print(f"Texto decifrado: {decrypted}")
-    print(f"Decifração correta: {plaintext == decrypted}\n")
+    print(f"Texto original (bytes): {plaintext_bytes}\n")
+    print(f"Texto cifrado (bytes): {ciphertext}\n")
+    print(f"Texto decifrado: {decrypted}\n")
+    print(f"Decifração correta: {plaintext == decrypted_text}\n")
 
     return keys
 
@@ -59,8 +63,8 @@ def test_hash_function():
     hash_result = crypto.calculate_sha3_hash(test_string)
     
     print(f"Mensagem: {test_string}")
-    print(f"Hash SHA3-256 (como inteiro): {hash_result}")
-    print(f"Tamanho do hash em bits: {hash_result.bit_length()}\n")
+    print(f"Hash SHA3-256 em bytes: {hash_result}")
+    print(f"Tamanho do hash em bytes: {len(hash_result)}\n")
 
 if __name__ == "__main__":
     # Executar todos os testes
