@@ -216,3 +216,7 @@ pdf_creator.py
 ieee.csl
 code-style.tex
 custom-template.tex
+/.idea/copilot.data.migration.agent.xml
+/.idea/copilot.data.migration.ask.xml
+/.idea/copilot.data.migration.ask2agent.xml
+/.idea/copilot.data.migration.edit.xml

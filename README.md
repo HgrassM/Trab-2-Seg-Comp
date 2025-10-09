@@ -12,6 +12,8 @@ O RSA (Rivest-Shamir-Adleman) é um algoritmo de criptografia assimétrica, em q
 
 O presente trabalho foi implementado em três partes: (1) geração de chaves públicas e privadas, (2) assinatura digital de mensagens e (3) verificação de assinaturas digitais e descriptografia de mensagens. A seguir, cada uma dessas partes é discutida em detalhes.
 
+O código do projeto foi escrito em python e está disponível no repositório GitHub: https://github.com/HgrassM/Trab-2-Seg-Comp. Não é necessário instalar bibliotecas adicionais para executar o código.
+
 # Fundamentação Teórica
 Para a execução deste trabalho, foram utilizados principalmente os conceitos de criptografia assimétrica, funções de hash criptográficas, cálculos probabilísticos e a teoria dos números, especialmente a geração de números primos grandes e o cálculo do inverso multiplicativo. Nas próximas seções, cada um desses conceitos será explorado em detalhes no contexto da implementação do RSA.
 
