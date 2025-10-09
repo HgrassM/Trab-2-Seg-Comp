@@ -157,7 +157,7 @@ No código desenvolvido, a função `padMessage()` implementa o OAEP com base na
    Um seed aleatório de comprimento `hLen` é gerado usando a biblioteca `secrets`, que provê aleatoriedade adequada para uso criptográfico como pode ser visto em `seed = secrets.token_bytes(self.oaep_hLen)`.
 
 3. **Geração das máscaras (MGF1)**  
-   A função **Mask Generation Function 1 (MGF1)** é utilizada para criar duas máscaras pseudoaleatórias, que estão implementadas em `DB_mask = MGF1(seed, k - hLen - 1)` e `seed_mask = MGF1(masked_DB, hLen)`. Além disso, a função MGF1 é responsável por expandir o seed em uma máscara de comprimento desejado usando a função de hash SHA3-512:
+   A função MGF1 é utilizada para criar duas máscaras pseudoaleatórias, que estão implementadas em `DB_mask = MGF1(seed, k - hLen - 1)` e `seed_mask = MGF1(masked_DB, hLen)`. Além disso, a função MGF1 é responsável por expandir o seed em uma máscara de comprimento desejado usando a função de hash SHA3-512:
    ```python
    def MGF1(self, mgfSeed: bytearray, maskLen: int) -> bytearray:
        if maskLen > pow(2,32)*self.oaep_hLen:
