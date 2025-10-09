@@ -8,16 +8,20 @@ bibliography: ["references.bib"]
 
 # Introdução
 
-O RSA (Rivest-Shamir-Adleman) é um algoritmo de criptografia assimétrica, em que são utilizadas duas chaves distintas: uma chave pública para criptografar mensagens e uma chave privada para descriptografá-las. O surgimento do RSA foi
-importante para resolver o problema de enviar uma mensagem criptografada sem que o remetente e o destinatário precisem compartilhar uma chave secreta previamente @VeritasRSA.
+O RSA (Rivest-Shamir-Adleman) é um algoritmo de criptografia assimétrica, em que são utilizadas duas chaves distintas: uma chave pública para criptografar mensagens e uma chave privada para descriptografá-las. O surgimento do RSA foi importante para resolver o problema de enviar uma mensagem criptografada sem que o remetente e o destinatário precisassem compartilhar uma chave secreta previamente @VeritasRSA.
 
 O presente trabalho foi implementado em três partes: (1) geração de chaves públicas e privadas, (2) assinatura digital de mensagens e (3) verificação de assinaturas digitais e descriptografia de mensagens. A seguir, cada uma dessas partes é discutida em detalhes.
+
+# Fundamentação Teórica
+Para a execução deste trabalho, foram utilizados principalmente os conceitos de criptografia assimétrica, funções de hash criptográficas, cálculos probabilísticos e a teoria dos números, especialmente a geração de números primos grandes e o cálculo do inverso multiplicativo. Nas próximas seções, cada um desses conceitos será explorado em detalhes no contexto da implementação do RSA.
 
 # Geração de Chaves
 
 A geração de chaves se baseia no conceito de "trapdoor one-way function", ou seja, uma função que é fácil de calcular em uma direção, mas quase impossível de inverter sem uma informação secreta (a "trapdoor"). No caso do RSA, a função é baseada na multiplicação de dois números primos grandes @katz2014introduction.
 
 Neste trabalho, os números primos gerados são de 2048 bits, ou seja, possuem aproximadamente 617 dígitos decimais. Para gerar esses números, são combinados dois métodos: (1) o "Sieve of Sundaram" para eliminar rapidamente números divisíveis por primos pequenos, e (2) o "Miller-Rabin Primality Test" para verificar a primalidade dos números restantes. Como o algoritmo de Miller-Rabin é mais custoso, ele é aplicado apenas a um subconjunto dos números gerados pelo Sieve of Sundaram.
+
+Além disso, para complementar a geração de chaves, foi utilizada o "Optimal Asymmetric Encryption Padding" (OAEP) para garantir que a mensagem a ser assinada seja menor que o módulo $n$. A OAEP é uma técnica de padding que adiciona aleatoriedade à mensagem antes da assinatura, aumentando a segurança contra ataques de texto simples @katz2014introduction.
 
 ## Sieve of Sundaram
 O código implementado gera um número aleatório $n$ de 2048 bits e utiliza o Sieve of Sundaram para gerar uma lista de números primos menores que $n$. O Sieve of Sundaram elimina números da forma $i + j + 2ij$, onde $1 \le i \le j$, resultando em uma lista de números que podem ser convertidos em primos utilizando a fórmula $2i + 1$. Abaixo está a implementação do Sieve of Sundaram:
@@ -139,6 +143,52 @@ def generateKeys():
     return {"e": e, "d": d, "n": n}
 ```
 
+## OAEP
+O OAEP é um método de preenchimento usado junto com o RSA para garantir que a cifração seja segura e não determinística. Sem esse mecanismo, uma mesma mensagem cifrada duas vezes com a mesma chave resultaria sempre na mesma cifra, o que poderia facilitar ataques de análise de frequência ou ataques de texto escolhido, nos quais um atacante cifra textos conhecidos e compara os resultados para tentar inferir o conteúdo ou a chave.
+
+O OAEP adiciona aleatoriedade e estrutura à mensagem antes da cifração. Ele realiza uma sequência de transformações que envolvem gerar um número aleatório (seed), embaralhar a mensagem com funções de hash e, por fim, cifrar o resultado com RSA. Isso garante que a mesma mensagem cifrada repetidas vezes produza cifras diferentes, reforçando a segurança contra ataques de análise de frequência por exemplo @katz2014introduction.
+
+No código desenvolvido, a função `padMessage()` implementa o OAEP com base na especificação PKCS #1, utilizando SHA3-512 como função de hash. O processo ocorre nas seguintes etapas:
+
+1. **Montagem do bloco de dados (DB)**  
+   A mensagem é organizada no formato `DB = hash(L) || PS || 0x01 || mensagem` onde `hash(L)` é o hash de um rótulo opcional (no caso, vazio), `PS` é uma sequência de bytes zero usada como padding, `0x01` é um delimitador e `mensagem` é o conteúdo original.
+
+2. **Geração de uma sequência aleatória (seed)**  
+   Um seed aleatório de comprimento `hLen` é gerado usando a biblioteca `secrets`, que provê aleatoriedade adequada para uso criptográfico:
+   ```python
+   seed = secrets.token_bytes(self.oaep_hLen)
+   ```
+
+3. **Geração das máscaras (MGF1)**  
+   A função **Mask Generation Function 1 (MGF1)** é utilizada para criar duas máscaras pseudoaleatórias, que estão implementadas em `DB_mask = MGF1(seed, k - hLen - 1)` e `seed_mask = MGF1(masked_DB, hLen)`. Além disso, a função MGF1 é responsável por expandir o seed em uma máscara de comprimento desejado usando a função de hash SHA3-512:
+   ```python
+   def MGF1(self, mgfSeed: bytearray, maskLen: int) -> bytearray:
+       if maskLen > pow(2,32)*self.oaep_hLen:
+           raise ValueError('The mask length is too long to be used on MGF1')
+
+       T_data = bytearray()
+       i = 0
+       while i < maskLen:
+           C_bstr = self.I2OSP(i, 4)
+           concat = bytearray(mgfSeed) + bytearray(C_bstr)
+           seed_hash = bytearray(hashlib.sha3_512(bytes(concat)).digest())
+           T_data.extend(seed_hash)
+           i += 1
+       return T_data[0:maskLen]
+   ```
+
+4. **Embaralhamento da mensagem e do seed**  
+   As máscaras geradas são aplicadas por meio da operação XOR. O Data Block (`DB`) é embaralhado com `DB_mask`, e o seed é embaralhado com `seed_mask`.
+
+5. **Combinação final e conversão para inteiro**  
+   O bloco final codificado (`EM`) é formado pela concatenação dado por `EM = 0x00 || masked_seed || masked_DB`. Esse bloco tem o mesmo tamanho da chave RSA (`k` bytes) e é convertido para inteiro usando a primitiva OS2IP (Octet String to Integer Primitive) antes da operação modular de cifração:
+   ```python
+   m = self.OS2IP(EM)
+   crypt_m = pow(m, e, n)
+   ```
+
+Em conjunto, essas etapas implementam o esquema OAEP, garantindo que o RSA opere sobre dados embaralhados e aleatórios. Esse mecanismo aumenta a segurança da cifração, tornando-a resistente a ataques de texto escolhido e a padrões repetitivos de entrada, além de assegurar a integridade estrutural da mensagem cifrada.
+
 # Assinatura Digital
 A assinatura digital é realizada utilizando a chave privada $(d, n)$. Como sabemos que é custo computacional é alto, o código gera um hash SHA3-256 da mensagem original e assina esse hash. A assinatura é calculada como $s = h(m)^d \pmod{n}$, onde $h(m)$ é o hash da mensagem $m$.
 
@@ -158,7 +208,7 @@ O hash é então assinado com a chave privada:
 ```python
 def sign_message(message, d, n):
     message_hash = calculate_sha3_hash(message)
-    signature = dummyEncrypt(message_hash, d, n)
+    signature = rsa_crypt.encrypt(message_hash, d, n)
     return signature
 ```
 
@@ -187,7 +237,7 @@ A função `verify_signature` realiza a verificação da assinatura e recebe qua
 ```python
 def verify_signature(message, signature, e, n):
     message_hash = calculate_sha3_hash(message)
-    decrypted_hash = dummyEncrypt(signature, e, n)
+    decrypted_hash = rsa_crypt.decrypt(signature, e, n)
     return message_hash == decrypted_hash
 ```
 
